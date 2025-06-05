@@ -7,11 +7,16 @@
   </p>
 </div>
 
+![image](https://github.com/user-attachments/assets/5e92f4a5-06fb-44c5-8b84-5eeec1476e0d)
+
 We spend hours working — often hunched, slouched, or craning our necks without realizing it. **WorkWell** is an iOS app that uses AirPods motion sensors to monitor your head posture in real-time. Get real-time feedback, detailed session reports, and gentle nudges to hold your head high and wear confidence daily.
 
 ## Overview
 
 WorkWell continuously tracks your head’s position by leveraging the motion sensors embedded in AirPods Pro. The app detects when your head is tilted too far down or back, signaling poor posture, and provides immediate visual feedback.
+
+![image](https://github.com/user-attachments/assets/a3ffcb93-c423-4b74-9f7c-6057344a157e)
+
 
 ## How It Works
 
@@ -22,6 +27,8 @@ Your AirPods Pro are packed with:
 - **Gyroscope:** Measures angular velocity (how fast the head rotates).
 - **Accelerometer:** Measures linear acceleration and gravity.
 - **Magnetometer:** Measures magnetic field direction to establish heading relative to magnetic north.
+
+![image](https://github.com/user-attachments/assets/53a1d909-c6d5-41be-9528-bf88639c6d03)
 
 Combining these sensors gives you a 9-axis Inertial Measurement Unit (IMU), which supplies rich, precise motion data.
 
@@ -48,9 +55,12 @@ These quaternions are then converted to **Euler angles** for interpretation:
 - **Roll:** Rotation around the longitudinal axis (head tilting side-to-side).
 - **Yaw:** Rotation around the vertical axis (head turning left/right).
 
+![image](https://github.com/user-attachments/assets/6babfef4-f998-4bf5-8ba9-29720eb83b5d)
+
 WorkWell primarily monitors the **pitch angle** to determine if the user’s head is tilted forward beyond a defined threshold (e.g., -22°), indicating poor posture.
 
 ## Features
+![image](https://github.com/user-attachments/assets/a7515e0d-b7e5-4626-976a-65d4cea02c84)
 
 - Real-time head posture monitoring with live visual feedback.
 - Posture quality detection based on head pitch thresholds.
@@ -59,6 +69,8 @@ WorkWell primarily monitors the **pitch angle** to determine if the user’s hea
 - Low-latency, smooth updates running at 60 FPS.
 
 ## Technical Details
+
+![image](https://github.com/user-attachments/assets/06a337b2-ff3d-4b48-9f8d-8870ee94d324)
 
 - Uses `CMHeadphoneMotionManager` for accessing AirPods Pro motion data.
 - Applies low-pass filtering to reduce jitter.
