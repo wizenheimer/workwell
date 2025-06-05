@@ -59,9 +59,9 @@ class HeadphoneMotionViewModel: ObservableObject {
         
         var message: String {
             switch self {
-            case .good: return "Good posture"
-            case .warning: return "Posture declining"
-            case .poor: return "Poor posture detected"
+            case .good: return "Looking great!"
+            case .warning: return "Getting there!"
+            case .poor: return "Chin up!"
             }
         }
     }
