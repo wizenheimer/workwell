@@ -7,7 +7,7 @@
   </p>
 </div>
 
-![image](https://github.com/user-attachments/assets/5e92f4a5-06fb-44c5-8b84-5eeec1476e0d)
+![image](https://github.com/user-attachments/assets/329fb965-d520-41fe-a024-dcfcb76fc1e5)
 
 We spend hours working — often hunched, slouched, or craning our necks without realizing it. **WorkWell** is an iOS app that uses AirPods motion sensors to monitor your head posture in real-time. Get real-time feedback, detailed session reports, and gentle nudges to hold your head high and wear confidence daily.
 
@@ -22,6 +22,8 @@ WorkWell continuously tracks your head’s position by leveraging the motion sen
 
 Tracking head orientation involves accurately determining the 3D rotation of the head relative to the world. This process uses data from multiple sensors and applies advanced mathematical techniques to produce stable, precise orientation measurements.
 
+![image](https://github.com/user-attachments/assets/5e92f4a5-06fb-44c5-8b84-5eeec1476e0d)
+
 Your AirPods Pro are packed with:
 
 - **Gyroscope:** Measures angular velocity (how fast the head rotates).
@@ -33,6 +35,9 @@ Your AirPods Pro are packed with:
 Combining these sensors gives you a 9-axis Inertial Measurement Unit (IMU), which supplies rich, precise motion data.
 
 ### Sensor Fusion and Filtering
+
+![image](https://github.com/user-attachments/assets/f7c12a78-3c94-490c-82bb-81086f90796d)
+
 
 Raw data from these sensors is noisy and prone to errors if used independently:
 
@@ -64,7 +69,13 @@ WorkWell primarily monitors the **pitch angle** to determine if the user’s hea
 
 - Real-time head posture monitoring with live visual feedback.
 - Posture quality detection based on head pitch thresholds.
+
+![image](https://github.com/user-attachments/assets/604a3fe3-f79e-40ee-b4d0-636250b69551)
+
 - Session tracking with historical posture data.
+
+![image](https://github.com/user-attachments/assets/0ccf3c21-6591-4654-9017-375a43357940)
+
 - Visualizations including pitch graphs and progress indicators.
 - Low-latency, smooth updates running at 60 FPS.
 
