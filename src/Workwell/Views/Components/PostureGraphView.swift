@@ -1,3 +1,10 @@
+//
+//  PostureGraphView.swift
+//  Workwell
+//
+//  Created by Nayan on 05/06/25.
+//
+
 import SwiftUI
 import Charts
 
@@ -5,127 +12,192 @@ struct PostureGraphView: View {
     let dataPoints: [Double]
     let currentPitch: Double
     
-    private let poorThreshold = -20.0
-    private let warningThreshold = -15.0
-    private let padding: Double = 5.0
+    // MARK: - Constants
     
-    private var minY: Double {
-        let dataMin = dataPoints.min() ?? 0
-        return min(dataMin, poorThreshold) - padding
+    private let goodPostureThreshold: Double = -15.0
+    private let poorPostureThreshold: Double = -20.0
+    private let maxDisplayPoints = 50
+    
+    // MARK: - Computed Properties
+    
+    private var chartData: [(index: Int, pitch: Double)] {
+        let points = Array(dataPoints.suffix(maxDisplayPoints))
+        return points.enumerated().map { (index: $0.offset, pitch: $0.element) }
     }
     
-    private var maxY: Double {
-        let dataMax = dataPoints.max() ?? 0
-        return max(dataMax, 0) + padding
+    private var yAxisRange: ClosedRange<Double> {
+        let minValue = min(-30.0, dataPoints.min() ?? -30.0)
+        let maxValue = max(10.0, dataPoints.max() ?? 10.0)
+        return minValue...maxValue
     }
+    
+    // MARK: - Body
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Pitch History")
-                .font(.headline)
-                .padding(.horizontal)
+        VStack(spacing: 0) {
+            if dataPoints.isEmpty {
+                emptyStateView
+            } else {
+                chartView
+            }
+        }
+    }
+    
+    // MARK: - Empty State
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.title2)
+                .foregroundColor(.secondary)
             
-            Chart {
-                // Threshold lines
-                poorThresholdLine
-                warningThresholdLine
-                
-                // Data lines
-                dataLines
-                
-                // Current point
-                currentPointMark
-            }
-            .chartYScale(domain: minY...maxY)
-            .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 0))
-            }
-            .frame(height: 120)
-            .padding(.horizontal)
+            Text("Collecting posture data...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
-        .padding(.vertical)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
-    // MARK: - Chart Components
+    // MARK: - Chart View
     
-    @ChartContentBuilder
-    private var poorThresholdLine: some ChartContent {
-        RuleMark(y: .value("Poor", poorThreshold))
-            .foregroundStyle(.red.opacity(0.5))
-            .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
-    }
-    
-    @ChartContentBuilder
-    private var warningThresholdLine: some ChartContent {
-        RuleMark(y: .value("Warning", warningThreshold))
-            .foregroundStyle(.orange.opacity(0.5))
-            .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
-    }
-    
-    @ChartContentBuilder
-    private var dataLines: some ChartContent {
-        ForEach(Array(dataPoints.enumerated()), id: \.offset) { index, value in
-            LineMark(
-                x: .value("Time", index),
-                y: .value("Pitch", value)
+    private var chartView: some View {
+        Chart {
+            // Good posture zone (background)
+            RectangleMark(
+                xStart: .value("Start", 0),
+                xEnd: .value("End", maxDisplayPoints),
+                yStart: .value("Good Start", goodPostureThreshold),
+                yEnd: .value("Good End", yAxisRange.upperBound)
             )
-            .foregroundStyle(lineColor(for: value))
-            .lineStyle(StrokeStyle(lineWidth: 2))
-        }
-    }
-    
-    @ChartContentBuilder
-    private var currentPointMark: some ChartContent {
-        if let lastIndex = dataPoints.indices.last,
-           lastIndex < dataPoints.count {
-            PointMark(
-                x: .value("Time", lastIndex),
-                y: .value("Pitch", dataPoints[lastIndex])
+            .foregroundStyle(.green.opacity(0.1))
+            
+            // Warning posture zone
+            RectangleMark(
+                xStart: .value("Start", 0),
+                xEnd: .value("End", maxDisplayPoints),
+                yStart: .value("Warning Start", poorPostureThreshold),
+                yEnd: .value("Warning End", goodPostureThreshold)
             )
-            .foregroundStyle(Color(.systemGray))
-            .symbolSize(100)
+            .foregroundStyle(.orange.opacity(0.1))
+            
+            // Poor posture zone
+            RectangleMark(
+                xStart: .value("Start", 0),
+                xEnd: .value("End", maxDisplayPoints),
+                yStart: .value("Poor Start", yAxisRange.lowerBound),
+                yEnd: .value("Poor End", poorPostureThreshold)
+            )
+            .foregroundStyle(.red.opacity(0.1))
+            
+            // Threshold lines
+            RuleMark(y: .value("Good Threshold", goodPostureThreshold))
+                .foregroundStyle(.green.opacity(0.5))
+                .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
+            
+            RuleMark(y: .value("Poor Threshold", poorPostureThreshold))
+                .foregroundStyle(.red.opacity(0.5))
+                .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
+            
+            // Main data line
+            ForEach(Array(chartData.enumerated()), id: \.offset) { _, point in
+                LineMark(
+                    x: .value("Time", point.index),
+                    y: .value("Pitch", point.pitch)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [colorForPitch(point.pitch), colorForPitch(point.pitch).opacity(0.7)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            }
+            
+            // Current position indicator
+            if let lastPoint = chartData.last {
+                PointMark(
+                    x: .value("Current Time", lastPoint.index),
+                    y: .value("Current Pitch", lastPoint.pitch)
+                )
+                .foregroundStyle(colorForPitch(lastPoint.pitch))
+                .symbol(.circle)
+                .symbolSize(100)
+            }
         }
+        .chartYScale(domain: yAxisRange)
+        .chartXAxis {
+            AxisMarks(position: .bottom, values: .stride(by: 10)) { _ in
+                AxisTick(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading, values: .stride(by: 5)) { value in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(.secondary.opacity(0.3))
+                AxisTick(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(.secondary)
+                AxisValueLabel {
+                    if let doubleValue = value.as(Double.self) {
+                        Text("\(Int(doubleValue))°")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: dataPoints.count)
     }
     
     // MARK: - Helper Methods
     
-    private func lineColor(for value: Double) -> Color {
-        if value < poorThreshold {
+    private func colorForPitch(_ pitch: Double) -> Color {
+        switch pitch {
+        case let p where p < poorPostureThreshold:
             return .red
-        } else if value < warningThreshold {
+        case let p where p < goodPostureThreshold:
             return .orange
-        } else {
+        default:
             return .green
         }
     }
 }
 
-#Preview("Good Posture") {
-    PostureGraphView(
-        dataPoints: [-5, -8, -7, -6, -5, -4],
-        currentPitch: -4
-    )
+#Preview {
+    VStack(spacing: 30) {
+        // With data
+        PostureGraphView(
+            dataPoints: generateSampleData(),
+            currentPitch: -12.5
+        )
+        .frame(height: 120)
+        
+        // Empty state
+        PostureGraphView(
+            dataPoints: [],
+            currentPitch: 0
+        )
+        .frame(height: 120)
+    }
+    .padding()
 }
 
-#Preview("Warning State") {
-    PostureGraphView(
-        dataPoints: [-12, -14, -16, -15, -14, -13],
-        currentPitch: -13
-    )
-}
-
-#Preview("Poor Posture") {
-    PostureGraphView(
-        dataPoints: [-18, -22, -25, -23, -21, -20],
-        currentPitch: -20
-    )
-}
-
-#Preview("Mixed States") {
-    PostureGraphView(
-        dataPoints: [-5, -12, -25, -15, -8, -4],
-        currentPitch: -4
-    )
+// Helper function for generating sample data
+private func generateSampleData() -> [Double] {
+    var data: [Double] = []
+    var currentValue: Double = -10
+    
+    for i in 0..<50 {
+        // Add some randomness and trends
+        let noise = Double.random(in: -2...2)
+        let trend = sin(Double(i) * 0.1) * 5
+        currentValue += noise + trend * 0.1
+        
+        // Keep within reasonable bounds
+        currentValue = max(-35, min(5, currentValue))
+        data.append(currentValue)
+    }
+    
+    return data
 }

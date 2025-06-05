@@ -13,35 +13,147 @@ struct PostureMetricsView: View {
     let poorPosturePercentage: Int
     let currentPitch: Double
     
+    // MARK: - Computed Properties
+    
+    private var goodPostureDuration: TimeInterval {
+        sessionDuration - poorPostureDuration
+    }
+    
+    private var formattedSessionDuration: String {
+        formatDuration(sessionDuration)
+    }
+    
+    private var formattedPoorPostureDuration: String {
+        formatDuration(poorPostureDuration)
+    }
+    
+    private var formattedGoodPostureDuration: String {
+        formatDuration(goodPostureDuration)
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let hours = Int(duration) / 3600
+        let minutes = (Int(duration) % 3600) / 60
+        let seconds = Int(duration) % 60
+        
+        if hours > 0 {
+            return String(format: "%dh %dm", hours, minutes)
+        } else if minutes > 0 {
+            return String(format: "%dm %ds", minutes, seconds)
+        } else {
+            return String(format: "%ds", seconds)
+        }
+    }
+    
+    // MARK: - Body
+    
     var body: some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 20) {
+            // Progress ring
+            progressRing
+            
+            // Metrics grid
+            metricsGrid
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(20)
+    }
+    
+    // MARK: - Progress Ring
+    
+    private var progressRing: some View {
+        ZStack {
+            // Background circle
+            Circle()
+                .stroke(Color(.tertiarySystemBackground), lineWidth: 12)
+                .frame(width: 120, height: 120)
+            
+            // Progress circle
+            Circle()
+                .trim(from: 0, to: CGFloat(poorPosturePercentage) / 100)
+                .stroke(
+                    LinearGradient(
+                        colors: gradientColors,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                )
+                .frame(width: 120, height: 120)
+                .rotationEffect(.degrees(-90))
+                .animation(.easeInOut(duration: 1.0), value: poorPosturePercentage)
+            
+            // Center content
+            VStack(spacing: 4) {
+                Text("\(poorPosturePercentage)%")
+                    .font(.title2.bold())
+                    .foregroundColor(.primary)
+                
+                Text("Poor Posture")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+    
+    private var gradientColors: [Color] {
+        switch poorPosturePercentage {
+        case 0...15:
+            return [.green, .green.opacity(0.7)]
+        case 16...30:
+            return [.orange, .yellow]
+        default:
+            return [.red, .red.opacity(0.7)]
+        }
+    }
+    
+    // MARK: - Metrics Grid
+    
+    private var metricsGrid: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 16) {
             MetricCard(
                 title: "Session Time",
-                value: formatDuration(sessionDuration),
+                value: formattedSessionDuration,
                 icon: "clock",
                 color: .blue
             )
             
             MetricCard(
-                title: "Poor Posture",
-                value: "\(poorPosturePercentage)%",
-                icon: "exclamationmark.triangle",
-                color: poorPosturePercentage > 30 ? .red : .green
+                title: "Good Posture",
+                value: formattedGoodPostureDuration,
+                icon: "checkmark.circle",
+                color: .green
             )
             
             MetricCard(
-                title: "Current Pitch",
+                title: "Poor Posture",
+                value: formattedPoorPostureDuration,
+                icon: "exclamationmark.circle",
+                color: poorPosturePercentage > 30 ? .red : .orange
+            )
+            
+            MetricCard(
+                title: "Current Angle",
                 value: String(format: "%.1f°", currentPitch),
-                icon: "arrow.up.and.down",
-                color: .purple
+                icon: "angle",
+                color: postureColor(for: currentPitch)
             )
         }
     }
     
-    private func formatDuration(_ duration: TimeInterval) -> String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%d:%02d", minutes, seconds)
+    private func postureColor(for pitch: Double) -> Color {
+        switch pitch {
+        case let p where p < -20:
+            return .red
+        case let p where p < -15:
+            return .orange
+        default:
+            return .green
+        }
     }
 }
 
@@ -53,51 +165,37 @@ struct MetricCard: View {
     
     var body: some View {
         VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
+            HStack {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundColor(color)
+                
+                Spacer()
+            }
             
-            Text(value)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(value)
+                    .font(.subheadline.bold())
+                    .foregroundColor(.primary)
+                
+                Text(title)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(Color(.secondarySystemBackground))
+        .padding(12)
+        .background(Color(.tertiarySystemBackground))
         .cornerRadius(12)
     }
 }
 
-#Preview("Good Posture") {
+#Preview {
     PostureMetricsView(
-        sessionDuration: 1800, // 30 minutes
-        poorPostureDuration: 300, // 5 minutes
-        poorPosturePercentage: 17,
-        currentPitch: 0.0
-    )
-    .padding()
-}
-
-#Preview("Poor Posture") {
-    PostureMetricsView(
-        sessionDuration: 3600, // 1 hour
-        poorPostureDuration: 1800, // 30 minutes
-        poorPosturePercentage: 50,
-        currentPitch: -15.0
-    )
-    .padding()
-}
-
-#Preview("Short Session") {
-    PostureMetricsView(
-        sessionDuration: 300, // 5 minutes
-        poorPostureDuration: 60, // 1 minute
-        poorPosturePercentage: 20,
-        currentPitch: 5.0
+        sessionDuration: 3665, // 1 hour, 1 minute, 5 seconds
+        poorPostureDuration: 550, // 9 minutes, 10 seconds
+        poorPosturePercentage: 15,
+        currentPitch: -12.5
     )
     .padding()
 }
