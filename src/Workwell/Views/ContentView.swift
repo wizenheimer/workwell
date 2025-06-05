@@ -290,3 +290,27 @@ struct SettingsView: View {
         }
     }
 }
+
+#Preview("Connected State") {
+    ContentView()
+        .environmentObject(PostureDataStore())
+}
+
+#Preview("Disconnected State") {
+    ContentView()
+        .environmentObject(PostureDataStore())
+}
+
+#Preview("Orientation Details") {
+    OrientationDetailsCard(
+        pitch: -15.5,
+        roll: 2.3,
+        yaw: 45.0
+    )
+    .padding()
+}
+
+#Preview("Settings") {
+    SettingsView()
+        .environmentObject(PostureDataStore())
+}

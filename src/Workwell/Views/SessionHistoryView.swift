@@ -195,3 +195,56 @@ struct SessionRowView: View {
         .cornerRadius(12)
     }
 }
+
+#Preview {
+    SessionHistoryView()
+        .environmentObject(PostureDataStore())
+}
+
+#Preview("Summary Card") {
+    SummaryCard(sessionCount: 5, averagePoorPosture: 25)
+        .padding()
+}
+
+#Preview("Session Chart") {
+    SessionChartView(sessions: [
+        PostureSession(
+            startTime: Date(),
+            endTime: Date().addingTimeInterval(3600),
+            poorPostureDuration: 720,
+            averagePitch: -15,
+            minPitch: -25,
+            maxPitch: -5
+        ),
+        PostureSession(
+            startTime: Date().addingTimeInterval(-86400),
+            endTime: Date().addingTimeInterval(-82800),
+            poorPostureDuration: 900,
+            averagePitch: -20,
+            minPitch: -30,
+            maxPitch: -10
+        ),
+        PostureSession(
+            startTime: Date().addingTimeInterval(-172800),
+            endTime: Date().addingTimeInterval(-169200),
+            poorPostureDuration: 540,
+            averagePitch: -10,
+            minPitch: -15,
+            maxPitch: -5
+        )
+    ])
+    .frame(height: 200)
+    .padding()
+}
+
+#Preview("Session Row") {
+    SessionRowView(session: PostureSession(
+        startTime: Date(),
+        endTime: Date().addingTimeInterval(3600),
+        poorPostureDuration: 720,
+        averagePitch: -15,
+        minPitch: -25,
+        maxPitch: -5
+    ))
+    .padding()
+}

@@ -71,3 +71,33 @@ struct MetricCard: View {
         .cornerRadius(12)
     }
 }
+
+#Preview("Good Posture") {
+    PostureMetricsView(
+        sessionDuration: 1800, // 30 minutes
+        poorPostureDuration: 300, // 5 minutes
+        poorPosturePercentage: 17,
+        currentPitch: 0.0
+    )
+    .padding()
+}
+
+#Preview("Poor Posture") {
+    PostureMetricsView(
+        sessionDuration: 3600, // 1 hour
+        poorPostureDuration: 1800, // 30 minutes
+        poorPosturePercentage: 50,
+        currentPitch: -15.0
+    )
+    .padding()
+}
+
+#Preview("Short Session") {
+    PostureMetricsView(
+        sessionDuration: 300, // 5 minutes
+        poorPostureDuration: 60, // 1 minute
+        poorPosturePercentage: 20,
+        currentPitch: 5.0
+    )
+    .padding()
+}

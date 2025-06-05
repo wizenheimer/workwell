@@ -100,3 +100,31 @@ struct PostureGraphView: View {
         }
     }
 }
+
+#Preview("Good Posture") {
+    PostureGraphView(
+        dataPoints: [-5, -8, -7, -6, -5, -4],
+        currentPitch: -4
+    )
+}
+
+#Preview("Warning State") {
+    PostureGraphView(
+        dataPoints: [-12, -14, -16, -15, -14, -13],
+        currentPitch: -13
+    )
+}
+
+#Preview("Poor Posture") {
+    PostureGraphView(
+        dataPoints: [-18, -22, -25, -23, -21, -20],
+        currentPitch: -20
+    )
+}
+
+#Preview("Mixed States") {
+    PostureGraphView(
+        dataPoints: [-5, -12, -25, -15, -8, -4],
+        currentPitch: -4
+    )
+}
