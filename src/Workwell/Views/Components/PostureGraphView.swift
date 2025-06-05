@@ -7,6 +7,17 @@ struct PostureGraphView: View {
     
     private let poorThreshold = -20.0
     private let warningThreshold = -15.0
+    private let padding: Double = 5.0
+    
+    private var minY: Double {
+        let dataMin = dataPoints.min() ?? 0
+        return min(dataMin, poorThreshold) - padding
+    }
+    
+    private var maxY: Double {
+        let dataMax = dataPoints.max() ?? 0
+        return max(dataMax, 0) + padding
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -25,7 +36,7 @@ struct PostureGraphView: View {
                 // Current point
                 currentPointMark
             }
-            .chartYScale(domain: -40...20)
+            .chartYScale(domain: minY...maxY)
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 0))
             }
@@ -44,11 +55,6 @@ struct PostureGraphView: View {
         RuleMark(y: .value("Poor", poorThreshold))
             .foregroundStyle(.red.opacity(0.5))
             .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
-            .annotation(position: .trailing) {
-                Text("Poor")
-                    .font(.caption2)
-                    .foregroundColor(.red)
-            }
     }
     
     @ChartContentBuilder
@@ -56,11 +62,6 @@ struct PostureGraphView: View {
         RuleMark(y: .value("Warning", warningThreshold))
             .foregroundStyle(.orange.opacity(0.5))
             .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
-            .annotation(position: .trailing) {
-                Text("Warning")
-                    .font(.caption2)
-                    .foregroundColor(.orange)
-            }
     }
     
     @ChartContentBuilder
@@ -83,7 +84,7 @@ struct PostureGraphView: View {
                 x: .value("Time", lastIndex),
                 y: .value("Pitch", dataPoints[lastIndex])
             )
-            .foregroundStyle(.blue)
+            .foregroundStyle(Color(.systemGray))
             .symbolSize(100)
         }
     }

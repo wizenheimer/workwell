@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    // MARK: - Properties
+    
     @StateObject private var motionVM = HeadphoneMotionViewModel()
-    @EnvironmentObject var dataStore: PostureDataStore
+    @Environment(\.modelContext) private var modelContext
     @State private var showingHistory = false
     @State private var showingSettings = false
+    
+    // MARK: - Body
     
     var body: some View {
         NavigationStack {
@@ -71,16 +76,20 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingHistory) {
                 NavigationStack {
-                    SessionHistoryView()
+                    SessionHistoryView(modelContext: modelContext)
                 }
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
         }
+        .onAppear {
+            PostureDataStore.shared.setModelContext(modelContext)
+        }
     }
     
     // MARK: - Connected Content
+    
     private var connectedContent: some View {
         VStack(spacing: 20) {
             // Posture visualization
@@ -115,6 +124,7 @@ struct ContentView: View {
     }
     
     // MARK: - Disconnected Content
+    
     private var disconnectedContent: some View {
         VStack(spacing: 30) {
             Spacer()
@@ -163,7 +173,8 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Orientation Details Card
+// MARK: - Supporting Views
+
 struct OrientationDetailsCard: View {
     let pitch: Double
     let roll: Double
@@ -229,9 +240,11 @@ struct OrientationRow: View {
 }
 
 // MARK: - Settings View
+
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var dataStore: PostureDataStore
+    @Environment(\.modelContext) private var modelContext
+    @Query private var sessions: [PostureSession]
     @State private var showingClearAlert = false
     
     var body: some View {
@@ -241,7 +254,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Total Sessions")
                         Spacer()
-                        Text("\(dataStore.sessions.count)")
+                        Text("\(sessions.count)")
                             .foregroundColor(.secondary)
                     }
                     
@@ -282,7 +295,7 @@ struct SettingsView: View {
             .alert("Clear All Data?", isPresented: $showingClearAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Clear", role: .destructive) {
-                    dataStore.clearAllSessions()
+                    try? modelContext.delete(model: PostureSession.self)
                 }
             } message: {
                 Text("This will permanently delete all session history.")
@@ -291,14 +304,20 @@ struct SettingsView: View {
     }
 }
 
+// MARK: - Previews
+
 #Preview("Connected State") {
-    ContentView()
-        .environmentObject(PostureDataStore())
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: PostureSession.self, configurations: config)
+    return ContentView()
+        .modelContext(container.mainContext)
 }
 
 #Preview("Disconnected State") {
-    ContentView()
-        .environmentObject(PostureDataStore())
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: PostureSession.self, configurations: config)
+    return ContentView()
+        .modelContext(container.mainContext)
 }
 
 #Preview("Orientation Details") {
@@ -311,6 +330,8 @@ struct SettingsView: View {
 }
 
 #Preview("Settings") {
-    SettingsView()
-        .environmentObject(PostureDataStore())
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: PostureSession.self, configurations: config)
+    return SettingsView()
+        .modelContext(container.mainContext)
 }

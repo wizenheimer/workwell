@@ -6,27 +6,47 @@
 //
 
 import Foundation
-import Combine
+import SwiftData
+import SwiftUI
 
-class PostureDataStore: ObservableObject {
+/// Manages the current posture tracking session and provides session-related operations
+@Observable
+@MainActor
+final class PostureDataStore {
+    // MARK: - Singleton
+    
     static let shared = PostureDataStore()
     
-    @Published var sessions: [PostureSession] = []
-    @Published var currentSession: PostureSession?
+    // MARK: - Properties
     
-    private let userDefaults = UserDefaults.standard
-    private let sessionsKey = "posture_sessions"
+    /// The currently active session, if any
+    private(set) var currentSession: PostureSession?
     
-    init() {
-        loadSessions()
+    /// The SwiftData model context for database operations
+    private var modelContext: ModelContext?
+    
+    // MARK: - Initialization
+    
+    private init() {}
+    
+    // MARK: - Session Management
+    
+    /// Sets the model context for the data store
+    /// - Parameter context: The SwiftData model context to use
+    func setModelContext(_ context: ModelContext) {
+        self.modelContext = context
     }
     
+    /// Starts a new posture tracking session
     func startNewSession() {
         currentSession = PostureSession()
     }
     
+    /// Ends the current session with the provided metrics
+    /// - Parameter metrics: The metrics collected during the session
     func endSession(with metrics: SessionMetrics) {
-        guard var session = currentSession else { return }
+        guard let session = currentSession,
+              let context = modelContext else { return }
         
         session.endTime = Date()
         session.poorPostureDuration = metrics.poorPostureDuration
@@ -34,33 +54,41 @@ class PostureDataStore: ObservableObject {
         session.minPitch = metrics.minPitch
         session.maxPitch = metrics.maxPitch
         
-        sessions.insert(session, at: 0)
-        saveSessions()
+        do {
+            context.insert(session)
+            try context.save()
+        } catch {
+            print("Failed to save session: \(error)")
+        }
+        
         currentSession = nil
     }
     
-    func saveSessions() {
-        if let encoded = try? JSONEncoder().encode(sessions) {
-            userDefaults.set(encoded, forKey: sessionsKey)
-        }
-    }
-    
-    private func loadSessions() {
-        if let data = userDefaults.data(forKey: sessionsKey),
-           let decoded = try? JSONDecoder().decode([PostureSession].self, from: data) {
-            sessions = decoded
-        }
-    }
-    
+    /// Deletes all sessions from the database
     func clearAllSessions() {
-        sessions.removeAll()
-        userDefaults.removeObject(forKey: sessionsKey)
+        guard let context = modelContext else { return }
+        
+        do {
+            try context.delete(model: PostureSession.self)
+        } catch {
+            print("Failed to clear sessions: \(error)")
+        }
     }
 }
 
+// MARK: - Supporting Types
+
+/// Metrics collected during a posture tracking session
 struct SessionMetrics {
+    /// Duration of poor posture during the session
     let poorPostureDuration: TimeInterval
+    
+    /// Average pitch angle during the session
     let averagePitch: Double
+    
+    /// Minimum pitch angle recorded during the session
     let minPitch: Double
+    
+    /// Maximum pitch angle recorded during the session
     let maxPitch: Double
 }
