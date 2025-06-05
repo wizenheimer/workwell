@@ -341,11 +341,6 @@ struct ContentView: View {
                 connectionStatusInfo
             }
             
-            // Feature highlights
-            if case .disconnected = connectionState {
-                featureHighlights
-            }
-            
             Spacer()
         }
     }
@@ -530,7 +525,7 @@ struct ContentView: View {
     private var connectionTitleText: String {
         switch connectionState {
         case .disconnected:
-            return "Connect AirPods Pro"
+            return "Connect AirPods"
         case .connecting:
             return "Connecting..."
         case .connected:
@@ -543,13 +538,13 @@ struct ContentView: View {
     private var connectionDescriptionText: String {
         switch connectionState {
         case .disconnected:
-            return "Put on your AirPods Pro to start tracking your posture and improve your work wellness."
+            return "Put on your AirPods and hold your head high"
         case .connecting:
-            return "Establishing connection with your AirPods Pro. This may take a few moments."
+            return "Hang tight—we’re connecting to your AirPods. This may take a few moments."
         case .connected:
-            return "Successfully connected to your AirPods Pro."
+            return "You're all set! Straighten up your workday"
         case .error:
-            return "Unable to connect to AirPods Pro. Make sure they're properly connected to your device."
+            return "Hmm, we couldn't connect. Let's give it another go."
         }
     }
     
